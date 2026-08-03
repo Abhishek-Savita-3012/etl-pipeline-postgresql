@@ -3,20 +3,7 @@ from pathlib import Path
 import pandas as pd
 import psycopg2
 
-
-def get_connection():
-    """
-    Create PostgreSQL connection.
-    """
-
-    return psycopg2.connect(
-        host="localhost",
-        database="etl_pipeline_db",
-        user="etl_user",
-        password="Abhi30@shek",
-        port=5432
-    )
-
+from etl_pipeline.config import get_connection
 
 def create_table(conn):
     """
