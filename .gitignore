@@ -1,27 +1,18 @@
+# Virtual Environment
+.venv/
+
 # Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Virtual Environment
-venv/
-.venv/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Airflow
-airflow.db
-airflow.cfg
-airflow-webserver.pid
-
-# Logs
-logs/
-*.log
 
 # Environment Variables
 .env
+
+# Logs
+logs/*.log
+
+# Jupyter
+.ipynb_checkpoints/
 
 # VS Code
 .vscode/
@@ -31,3 +22,4 @@ logs/
 
 # Windows
 Thumbs.db
+desktop.ini
