@@ -3,39 +3,100 @@ from pathlib import Path
 import pandas as pd
 
 from etl_pipeline.logger import logger
-from etl_pipeline.settings import RAW_CUSTOMERS_FILE
 
 
-def extract_csv(file_path):
+def extract_csv(path):
     """
-    Reads a CSV file and returns a Pandas DataFrame.
+    Reads one or more CSV files and returns a combined DataFrame.
+
+    Supports:
+    - Single CSV file
+    - Directory containing multiple CSV files
     """
 
     logger.info("Starting Extract Phase...")
 
-    file = Path(file_path)
+    path = Path(path)
 
-    # Check if file exists
-    if not file.exists():
-        logger.error(f"File not found: {file_path}")
-        raise FileNotFoundError(f"{file_path} does not exist.")
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path} does not exist."
+        )
 
-    # Check if file is empty
-    if file.stat().st_size == 0:
-        logger.error(f"CSV file is empty: {file_path}")
-        raise ValueError("CSV file is empty.")
+    # -------------------------
+    # Single CSV File
+    # -------------------------
+    if path.is_file():
 
-    # Read CSV
-    df = pd.read_csv(file)
+        if path.suffix.lower() != ".csv":
+            raise ValueError("File must be a CSV.")
 
-    logger.info(f"Successfully extracted {len(df)} records from {file_path}")
+        if path.stat().st_size == 0:
+            raise ValueError("CSV file is empty.")
 
-    return df
+        logger.info(f"Reading {path.name}")
+
+        df = pd.read_csv(path)
+
+        logger.info(
+            f"Successfully extracted {len(df)} records."
+        )
+
+        return df
+
+    # -------------------------
+    # Directory of CSV Files
+    # -------------------------
+    csv_files = sorted(path.glob("*.csv"))
+
+    if not csv_files:
+        raise FileNotFoundError(
+            "No CSV files found."
+        )
+
+    dataframes = []
+
+    for file in csv_files:
+
+        if file.stat().st_size == 0:
+
+            logger.warning(
+                f"Skipping empty file: {file.name}"
+            )
+
+            continue
+
+        logger.info(f"Reading {file.name}")
+
+        df = pd.read_csv(file)
+
+        logger.info(
+            f"{len(df)} records loaded."
+        )
+
+        dataframes.append(df)
+
+    if not dataframes:
+        raise ValueError(
+            "All CSV files are empty."
+        )
+
+    combined_df = pd.concat(
+        dataframes,
+        ignore_index=True
+    )
+
+    logger.info(
+        f"Total records extracted: {len(combined_df)}"
+    )
+
+    return combined_df
 
 
 if __name__ == "__main__":
 
-    data = extract_csv(RAW_CUSTOMERS_FILE)
+    from etl_pipeline.settings import RAW_DATA_DIRECTORY
 
-    logger.info("Extraction completed successfully.")
-    logger.info(f"\n{data.head()}")
+    df = extract_csv(RAW_DATA_DIRECTORY)
+
+    print(df.head())

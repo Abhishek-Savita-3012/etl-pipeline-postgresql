@@ -19,11 +19,16 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 ARCHIVE_DIR = DATA_DIR / "archive"
 
 # --------------------------------------------------
-# Files
+# Files & Directories
 # --------------------------------------------------
 
+# Directory containing all raw CSV files
+RAW_DATA_DIRECTORY = RAW_DATA_DIR
+
+# (Optional) Default raw customer file
 RAW_CUSTOMERS_FILE = RAW_DATA_DIR / "customers.csv"
 
+# Processed output file
 PROCESSED_CUSTOMERS_FILE = (
     PROCESSED_DATA_DIR / "customers_clean.csv"
 )

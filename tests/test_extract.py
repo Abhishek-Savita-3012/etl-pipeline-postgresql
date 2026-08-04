@@ -15,18 +15,18 @@ def test_extract_csv_not_empty():
 
     df = extract_csv(RAW_CUSTOMERS_FILE)
 
-    assert len(df) > 0
+    assert not df.empty
 
 
 def test_extract_has_expected_columns():
 
     df = extract_csv(RAW_CUSTOMERS_FILE)
 
-    expected_columns = [
+    expected = [
         "CustomerID",
         "Name",
         "Age",
         "City",
     ]
 
-    assert list(df.columns) == expected_columns
+    assert list(df.columns) == expected

@@ -7,8 +7,8 @@ from etl_pipeline.incremental import filter_new_records
 from etl_pipeline.load import create_table, load_data
 from etl_pipeline.logger import logger
 from etl_pipeline.settings import (
+    RAW_DATA_DIRECTORY,
     PROCESSED_CUSTOMERS_FILE,
-    RAW_CUSTOMERS_FILE,
 )
 from etl_pipeline.transform import transform_data
 from etl_pipeline.validation import validate_dataframe
@@ -30,7 +30,7 @@ def run_pipeline():
         # -------------------------
         # Extract
         # -------------------------
-        df = extract_csv(RAW_CUSTOMERS_FILE)
+        df = extract_csv(RAW_DATA_DIRECTORY)
 
         # -------------------------
         # Validate
