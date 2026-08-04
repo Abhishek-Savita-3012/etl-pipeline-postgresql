@@ -1,8 +1,10 @@
-from pathlib import Path
-
 import pandas as pd
 
 from etl_pipeline.logger import logger
+from etl_pipeline.settings import (
+    RAW_CUSTOMERS_FILE,
+    PROCESSED_CUSTOMERS_FILE,
+)
 
 
 def transform_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -12,31 +14,45 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
 
     logger.info("Starting Transform Phase...")
 
+    # ----------------------------
     # Standardize column names
+    # ----------------------------
     df.columns = df.columns.str.strip().str.lower()
 
-    # Remove duplicates
+    # ----------------------------
+    # Remove duplicate rows
+    # ----------------------------
     duplicates_removed = df.duplicated().sum()
     df = df.drop_duplicates()
 
-    # Remove rows with missing names
+    # ----------------------------
+    # Handle missing values
+    # ----------------------------
+
+    # Drop rows where Name is missing
     missing_names = df["name"].isnull().sum()
     df = df.dropna(subset=["name"])
 
-    # Fill missing age
+    # Fill missing Age with median
     df["age"] = df["age"].fillna(df["age"].median())
 
-    # Fill missing city
+    # Fill missing City with "Unknown"
     df["city"] = df["city"].fillna("Unknown")
 
+    # ----------------------------
     # Standardize names
+    # ----------------------------
     df["name"] = df["name"].str.title()
 
+    # ----------------------------
     # Remove invalid ages
+    # ----------------------------
     invalid_age = (df["age"] > 100).sum()
     df = df[df["age"] <= 100]
 
-    # Convert datatype
+    # ----------------------------
+    # Convert Age to integer
+    # ----------------------------
     df["age"] = df["age"].astype(int)
 
     logger.info(f"Duplicates Removed : {duplicates_removed}")
@@ -50,16 +66,20 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
 
-    input_file = Path("data/raw/customers.csv")
-
-    df = pd.read_csv(input_file)
+    df = pd.read_csv(RAW_CUSTOMERS_FILE)
 
     cleaned_df = transform_data(df)
 
-    output_file = Path("data/processed/customers_clean.csv")
+    PROCESSED_CUSTOMERS_FILE.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    cleaned_df.to_csv(
+        PROCESSED_CUSTOMERS_FILE,
+        index=False
+    )
 
-    cleaned_df.to_csv(output_file, index=False)
-
-    logger.info(f"Cleaned data saved to {output_file}")
+    logger.info(
+        f"Cleaned data saved to {PROCESSED_CUSTOMERS_FILE}"
+    )

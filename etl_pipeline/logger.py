@@ -1,8 +1,6 @@
 import logging
 import os
-
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "etl.log")
+from etl_pipeline.settings import LOG_DIR, LOG_FILE
 
 os.makedirs(LOG_DIR, exist_ok=True)
 

@@ -1,4 +1,3 @@
-from pathlib import Path
 import time
 import traceback
 
@@ -6,10 +5,17 @@ from etl_pipeline.config import get_connection
 from etl_pipeline.extract import extract_csv
 from etl_pipeline.load import create_table, load_data
 from etl_pipeline.logger import logger
+from etl_pipeline.settings import (
+    RAW_CUSTOMERS_FILE,
+    PROCESSED_CUSTOMERS_FILE,
+)
 from etl_pipeline.transform import transform_data
 
 
 def run_pipeline():
+    """
+    Runs the complete ETL pipeline.
+    """
 
     start_time = time.perf_counter()
     conn = None
@@ -19,26 +25,29 @@ def run_pipeline():
     logger.info("=" * 60)
 
     try:
-
         # -------------------------
         # Extract
         # -------------------------
-        raw_file = Path("data/raw/customers.csv")
-
-        df = extract_csv(raw_file)
+        df = extract_csv(RAW_CUSTOMERS_FILE)
 
         # -------------------------
         # Transform
         # -------------------------
         df = transform_data(df)
 
-        processed_file = Path("data/processed/customers_clean.csv")
+        PROCESSED_CUSTOMERS_FILE.parent.mkdir(
+            parents=True,
+            exist_ok=True
+        )
 
-        processed_file.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(
+            PROCESSED_CUSTOMERS_FILE,
+            index=False
+        )
 
-        df.to_csv(processed_file, index=False)
-
-        logger.info(f"Processed data saved to: {processed_file}")
+        logger.info(
+            f"Processed data saved to: {PROCESSED_CUSTOMERS_FILE}"
+        )
 
         # -------------------------
         # Load
@@ -56,9 +65,7 @@ def run_pipeline():
     except Exception as e:
 
         logger.exception("ETL Pipeline Failed!")
-
         logger.error(str(e))
-
         logger.debug(traceback.format_exc())
 
         return False
@@ -71,7 +78,9 @@ def run_pipeline():
 
         execution_time = time.perf_counter() - start_time
 
-        logger.info(f"Execution Time: {execution_time:.2f} seconds")
+        logger.info(
+            f"Execution Time: {execution_time:.2f} seconds"
+        )
 
         logger.info("=" * 60)
 

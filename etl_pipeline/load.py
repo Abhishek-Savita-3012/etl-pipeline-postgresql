@@ -1,19 +1,20 @@
-from pathlib import Path
-
 import pandas as pd
 
 from etl_pipeline.config import get_connection
 from etl_pipeline.logger import logger
+from etl_pipeline.settings import (
+    CREATE_CUSTOMERS_TABLE_SQL,
+    PROCESSED_CUSTOMERS_FILE,
+    CUSTOMERS_TABLE,
+)
 
 
 def create_table(conn):
     """
-    Create customers table.
+    Create customers table if it doesn't already exist.
     """
 
-    sql_file = Path("sql/create_customers_table.sql")
-
-    with open(sql_file, "r") as file:
+    with open(CREATE_CUSTOMERS_TABLE_SQL, "r") as file:
         query = file.read()
 
     cur = conn.cursor()
@@ -24,7 +25,7 @@ def create_table(conn):
 
     cur.close()
 
-    logger.info("Customers table verified successfully.")
+    logger.info(f"Table '{CUSTOMERS_TABLE}' verified successfully.")
 
 
 def load_data(conn, df):
@@ -41,8 +42,8 @@ def load_data(conn, df):
     for _, row in df.iterrows():
 
         cur.execute(
-            """
-            INSERT INTO customers
+            f"""
+            INSERT INTO {CUSTOMERS_TABLE}
             (customer_id, name, age, city)
 
             VALUES (%s, %s, %s, %s)
@@ -74,7 +75,7 @@ if __name__ == "__main__":
 
     create_table(conn)
 
-    df = pd.read_csv("data/processed/customers_clean.csv")
+    df = pd.read_csv(PROCESSED_CUSTOMERS_FILE)
 
     load_data(conn, df)
 
