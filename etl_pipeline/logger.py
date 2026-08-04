@@ -1,16 +1,71 @@
 import logging
-import os
-from etl_pipeline.settings import LOG_DIR, LOG_FILE
+from logging.handlers import RotatingFileHandler
 
-os.makedirs(LOG_DIR, exist_ok=True)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE),
-        logging.StreamHandler()
-    ]
+from etl_pipeline.settings import (
+    LOG_DIR,
+    LOG_FILE,
+    LOG_LEVEL,
+    LOG_MAX_SIZE_MB,
+    LOG_BACKUP_COUNT,
 )
 
-logger = logging.getLogger(__name__)
+# --------------------------------------------------
+# Create Logs Directory
+# --------------------------------------------------
+
+LOG_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+# --------------------------------------------------
+# Logger
+# --------------------------------------------------
+
+logger = logging.getLogger("etl_pipeline")
+
+logger.setLevel(LOG_LEVEL)
+
+# Prevent duplicate handlers
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# --------------------------------------------------
+# Formatter
+# --------------------------------------------------
+
+formatter = logging.Formatter(
+    "%(asctime)s | %(levelname)s | %(message)s"
+)
+
+# --------------------------------------------------
+# Rotating File Handler
+# --------------------------------------------------
+
+file_handler = RotatingFileHandler(
+    filename=LOG_FILE,
+    maxBytes=LOG_MAX_SIZE_MB * 1024 * 1024,
+    backupCount=LOG_BACKUP_COUNT,
+    encoding="utf-8",
+)
+
+file_handler.setFormatter(formatter)
+
+# --------------------------------------------------
+# Console Handler
+# --------------------------------------------------
+
+console_handler = logging.StreamHandler()
+
+console_handler.setFormatter(formatter)
+
+# --------------------------------------------------
+# Add Handlers
+# --------------------------------------------------
+
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Prevent log messages from propagating
+# to the root logger.
+logger.propagate = False

@@ -9,6 +9,8 @@ files:
 
 logging:
   level: INFO
+  max_size_mb: 1
+  backup_count: 5
 
 pipeline:
   archive_enabled: true

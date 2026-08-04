@@ -65,6 +65,10 @@ LOG_FILE = LOG_DIR / "etl.log"
 
 LOG_LEVEL = config["logging"]["level"]
 
+LOG_MAX_SIZE_MB = config["logging"]["max_size_mb"]
+
+LOG_BACKUP_COUNT = config["logging"]["backup_count"]
+
 # --------------------------------------------------
 # Database
 # --------------------------------------------------

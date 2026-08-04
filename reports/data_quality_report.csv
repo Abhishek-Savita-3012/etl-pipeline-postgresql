@@ -1,2 +1,2 @@
 Timestamp,Total Records,Duplicates Removed,Missing Names,Invalid Ages,Cleaned Records,Existing Records,New Records,Execution Time (sec),Pipeline Status
-2026-08-05 00:05:14,16,1,1,1,13,13,0,0.41,SUCCESS
+2026-08-05 00:10:33,16,1,1,1,13,13,0,0.25,SUCCESS
