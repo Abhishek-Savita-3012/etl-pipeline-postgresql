@@ -10,6 +10,7 @@ from etl_pipeline.settings import (
     PROCESSED_CUSTOMERS_FILE,
 )
 from etl_pipeline.transform import transform_data
+from etl_pipeline.validation import validate_dataframe
 
 
 def run_pipeline():
@@ -29,6 +30,7 @@ def run_pipeline():
         # Extract
         # -------------------------
         df = extract_csv(RAW_CUSTOMERS_FILE)
+        validate_dataframe(df)
 
         # -------------------------
         # Transform
