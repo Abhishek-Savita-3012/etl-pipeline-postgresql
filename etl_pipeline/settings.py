@@ -56,3 +56,13 @@ LOG_FILE = LOG_DIR / "etl.log"
 # --------------------------------------------------
 
 CUSTOMERS_TABLE = "customers"
+
+# --------------------------------------------------
+# Reports
+# --------------------------------------------------
+
+REPORTS_DIR = PROJECT_ROOT / "reports"
+
+DATA_QUALITY_REPORT = (
+    REPORTS_DIR / "data_quality_report.csv"
+)

@@ -61,7 +61,13 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
 
     logger.info("Transformation completed successfully.")
 
-    return df
+    metrics = {
+        "duplicates_removed": duplicates_removed,
+        "missing_names": missing_names,
+        "invalid_ages": invalid_age,
+    }
+
+    return df, metrics
 
 
 if __name__ == "__main__":

@@ -6,6 +6,10 @@ from etl_pipeline.extract import extract_csv
 from etl_pipeline.incremental import filter_new_records
 from etl_pipeline.load import create_table, load_data
 from etl_pipeline.logger import logger
+from etl_pipeline.report import (
+    create_metrics,
+    generate_report,
+)
 from etl_pipeline.settings import (
     RAW_DATA_DIRECTORY,
     PROCESSED_CUSTOMERS_FILE,
@@ -40,7 +44,11 @@ def run_pipeline():
         # -------------------------
         # Transform
         # -------------------------
-        df = transform_data(df)
+        total_records = len(df)
+
+        df, transform_metrics = transform_data(df)
+
+        cleaned_records = len(df)
 
         # -------------------------
         # Save Processed Data
@@ -69,12 +77,41 @@ def run_pipeline():
         # -------------------------
         # Incremental Loading
         # -------------------------
-        new_df = filter_new_records(conn, df)
+        new_df, existing_records, new_records = (
+            filter_new_records(conn, df)
+        )
 
         # -------------------------
         # Load
         # -------------------------
         load_data(conn, new_df)
+
+        execution_time = (
+            time.perf_counter() - start_time
+        )
+
+        # -------------------------
+        # Generate Data Quality Report
+        # -------------------------
+        metrics = create_metrics(
+            total_records=total_records,
+            duplicates_removed=transform_metrics[
+                "duplicates_removed"
+            ],
+            missing_names=transform_metrics[
+                "missing_names"
+            ],
+            invalid_ages=transform_metrics[
+                "invalid_ages"
+            ],
+            cleaned_records=cleaned_records,
+            existing_records=existing_records,
+            new_records=new_records,
+            execution_time=execution_time,
+            pipeline_status="SUCCESS",
+        )
+
+        generate_report(metrics)
 
         logger.info("ETL Pipeline executed successfully.")
 
@@ -85,6 +122,24 @@ def run_pipeline():
         logger.exception("ETL Pipeline Failed!")
         logger.debug(traceback.format_exc())
 
+        execution_time = (
+            time.perf_counter() - start_time
+        )
+
+        metrics = create_metrics(
+            total_records=0,
+            duplicates_removed=0,
+            missing_names=0,
+            invalid_ages=0,
+            cleaned_records=0,
+            existing_records=0,
+            new_records=0,
+            execution_time=execution_time,
+            pipeline_status="FAILED",
+        )
+
+        generate_report(metrics)
+
         return False
 
     finally:
@@ -93,7 +148,9 @@ def run_pipeline():
             conn.close()
             logger.info("Database connection closed.")
 
-        execution_time = time.perf_counter() - start_time
+        execution_time = (
+            time.perf_counter() - start_time
+        )
 
         logger.info(
             f"Execution Time: {execution_time:.2f} seconds"
