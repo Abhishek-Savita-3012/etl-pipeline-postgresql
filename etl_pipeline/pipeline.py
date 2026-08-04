@@ -10,16 +10,31 @@ from etl_pipeline.extract import extract_csv
 from etl_pipeline.incremental import filter_new_records
 from etl_pipeline.load import create_table, load_data
 from etl_pipeline.logger import logger
+from etl_pipeline.notification import (
+    notify_failure,
+    notify_success,
+)
 from etl_pipeline.report import (
     create_metrics,
     generate_report,
 )
 from etl_pipeline.settings import (
-    RAW_DATA_DIRECTORY,
     PROCESSED_CUSTOMERS_FILE,
+    RAW_DATA_DIRECTORY,
 )
 from etl_pipeline.transform import transform_data
 from etl_pipeline.validation import validate_dataframe
+
+
+def finalize_pipeline(conn, metrics):
+    """
+    Generate report and save audit record.
+    """
+
+    generate_report(metrics)
+
+    if conn is not None:
+        insert_audit_record(conn, metrics)
 
 
 def run_pipeline():
@@ -35,6 +50,7 @@ def run_pipeline():
     logger.info("=" * 60)
 
     try:
+
         # -------------------------
         # Extract
         # -------------------------
@@ -68,7 +84,8 @@ def run_pipeline():
         )
 
         logger.info(
-            f"Processed data saved to: {PROCESSED_CUSTOMERS_FILE}"
+            f"Processed data saved to: "
+            f"{PROCESSED_CUSTOMERS_FILE}"
         )
 
         # -------------------------
@@ -96,7 +113,7 @@ def run_pipeline():
         )
 
         # -------------------------
-        # Generate Report
+        # Metrics
         # -------------------------
         metrics = create_metrics(
             total_records=total_records,
@@ -116,8 +133,12 @@ def run_pipeline():
             pipeline_status="SUCCESS",
         )
 
-        generate_report(metrics)
-        insert_audit_record(conn, metrics)
+        # -------------------------
+        # Finalize
+        # -------------------------
+        finalize_pipeline(conn, metrics)
+
+        notify_success(metrics)
 
         logger.info(
             "ETL Pipeline executed successfully."
@@ -125,7 +146,7 @@ def run_pipeline():
 
         return True
 
-    except Exception:
+    except Exception as e:
 
         logger.exception("ETL Pipeline Failed!")
         logger.debug(traceback.format_exc())
@@ -146,11 +167,12 @@ def run_pipeline():
             pipeline_status="FAILED",
         )
 
-        generate_report(metrics)
+        # -------------------------
+        # Finalize
+        # -------------------------
+        finalize_pipeline(conn, metrics)
 
-        # Insert audit record only if DB connection exists
-        if conn is not None:
-            insert_audit_record(conn, metrics)
+        notify_failure(e)
 
         return False
 
@@ -158,6 +180,7 @@ def run_pipeline():
 
         if conn is not None:
             conn.close()
+
             logger.info(
                 "Database connection closed."
             )
@@ -167,7 +190,8 @@ def run_pipeline():
         )
 
         logger.info(
-            f"Execution Time: {execution_time:.2f} seconds"
+            f"Execution Time: "
+            f"{execution_time:.2f} seconds"
         )
 
         logger.info("=" * 60)
