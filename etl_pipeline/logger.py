@@ -1,12 +1,18 @@
 import logging
-from pathlib import Path
+import os
 
-Path("logs").mkdir(exist_ok=True)
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, "etl.log")
+
+os.makedirs(LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
-    filename="logs/etl.log",
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
 )
 
 logger = logging.getLogger(__name__)

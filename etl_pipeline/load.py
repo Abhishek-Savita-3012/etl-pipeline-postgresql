@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
-import psycopg2
 
 from etl_pipeline.config import get_connection
+from etl_pipeline.logger import logger
+
 
 def create_table(conn):
     """
@@ -23,11 +24,15 @@ def create_table(conn):
 
     cur.close()
 
+    logger.info("Customers table verified successfully.")
+
 
 def load_data(conn, df):
     """
     Load DataFrame into PostgreSQL.
     """
+
+    logger.info("Starting Load Phase...")
 
     cur = conn.cursor()
 
@@ -49,8 +54,8 @@ def load_data(conn, df):
                 int(row["customerid"]),
                 row["name"],
                 int(row["age"]),
-                row["city"]
-            )
+                row["city"],
+            ),
         )
 
         inserted += 1
@@ -59,7 +64,8 @@ def load_data(conn, df):
 
     cur.close()
 
-    print(f"\nRows Processed : {inserted}")
+    logger.info(f"Rows Processed : {inserted}")
+    logger.info("Data loaded successfully.")
 
 
 if __name__ == "__main__":
@@ -74,4 +80,4 @@ if __name__ == "__main__":
 
     conn.close()
 
-    print("\nData Loaded Successfully!")
+    logger.info("Database connection closed.")
