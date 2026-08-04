@@ -22,6 +22,9 @@ from etl_pipeline.settings import (
     PROCESSED_CUSTOMERS_FILE,
     RAW_DATA_DIRECTORY,
 )
+from etl_pipeline.archive import (
+    archive_processed_file,
+)
 from etl_pipeline.transform import transform_data
 from etl_pipeline.validation import validate_dataframe
 
@@ -82,6 +85,8 @@ def run_pipeline():
             PROCESSED_CUSTOMERS_FILE,
             index=False
         )
+
+        archive_processed_file()
 
         logger.info(
             f"Processed data saved to: "

@@ -16,8 +16,6 @@ RAW_DATA_DIR = DATA_DIR / "raw"
 
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
-ARCHIVE_DIR = DATA_DIR / "archive"
-
 # --------------------------------------------------
 # Files & Directories
 # --------------------------------------------------
@@ -76,3 +74,9 @@ CREATE_ETL_RUN_HISTORY_SQL = (
 )
 
 ETL_RUN_HISTORY_TABLE = "etl_run_history"
+
+# --------------------------------------------------
+# Archive
+# --------------------------------------------------
+
+ARCHIVE_DIRECTORY = DATA_DIR / "archive"
