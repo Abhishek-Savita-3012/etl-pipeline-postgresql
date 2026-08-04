@@ -66,3 +66,13 @@ REPORTS_DIR = PROJECT_ROOT / "reports"
 DATA_QUALITY_REPORT = (
     REPORTS_DIR / "data_quality_report.csv"
 )
+
+# --------------------------------------------------
+# Audit
+# --------------------------------------------------
+
+CREATE_ETL_RUN_HISTORY_SQL = (
+    SQL_DIR / "create_etl_run_history.sql"
+)
+
+ETL_RUN_HISTORY_TABLE = "etl_run_history"

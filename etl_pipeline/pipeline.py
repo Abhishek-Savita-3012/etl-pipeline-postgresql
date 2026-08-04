@@ -1,6 +1,10 @@
 import time
 import traceback
 
+from etl_pipeline.audit import (
+    create_audit_table,
+    insert_audit_record,
+)
 from etl_pipeline.config import get_connection
 from etl_pipeline.extract import extract_csv
 from etl_pipeline.incremental import filter_new_records
@@ -73,6 +77,7 @@ def run_pipeline():
         conn = get_connection()
 
         create_table(conn)
+        create_audit_table(conn)
 
         # -------------------------
         # Incremental Loading
@@ -91,7 +96,7 @@ def run_pipeline():
         )
 
         # -------------------------
-        # Generate Data Quality Report
+        # Generate Report
         # -------------------------
         metrics = create_metrics(
             total_records=total_records,
@@ -112,8 +117,11 @@ def run_pipeline():
         )
 
         generate_report(metrics)
+        insert_audit_record(conn, metrics)
 
-        logger.info("ETL Pipeline executed successfully.")
+        logger.info(
+            "ETL Pipeline executed successfully."
+        )
 
         return True
 
@@ -140,13 +148,19 @@ def run_pipeline():
 
         generate_report(metrics)
 
+        # Insert audit record only if DB connection exists
+        if conn is not None:
+            insert_audit_record(conn, metrics)
+
         return False
 
     finally:
 
         if conn is not None:
             conn.close()
-            logger.info("Database connection closed.")
+            logger.info(
+                "Database connection closed."
+            )
 
         execution_time = (
             time.perf_counter() - start_time
