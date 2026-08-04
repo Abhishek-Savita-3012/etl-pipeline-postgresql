@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from etl_pipeline.config_loader import config
+
 # --------------------------------------------------
 # Project Root
 # --------------------------------------------------
@@ -12,9 +14,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DATA_DIR = PROJECT_ROOT / "data"
 
-RAW_DATA_DIR = DATA_DIR / "raw"
+RAW_DATA_DIR = PROJECT_ROOT / config["files"]["raw_directory"]
 
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
+PROCESSED_DATA_DIR = (
+    PROJECT_ROOT / config["files"]["processed_directory"]
+)
+
+ARCHIVE_DIRECTORY = (
+    PROJECT_ROOT / config["files"]["archive_directory"]
+)
 
 # --------------------------------------------------
 # Files & Directories
@@ -23,8 +31,10 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 # Directory containing all raw CSV files
 RAW_DATA_DIRECTORY = RAW_DATA_DIR
 
-# (Optional) Default raw customer file
-RAW_CUSTOMERS_FILE = RAW_DATA_DIR / "customers.csv"
+# Default raw customer file
+RAW_CUSTOMERS_FILE = (
+    RAW_DATA_DIR / "customers.csv"
+)
 
 # Processed output file
 PROCESSED_CUSTOMERS_FILE = (
@@ -41,6 +51,10 @@ CREATE_CUSTOMERS_TABLE_SQL = (
     SQL_DIR / "create_customers_table.sql"
 )
 
+CREATE_ETL_RUN_HISTORY_SQL = (
+    SQL_DIR / "create_etl_run_history.sql"
+)
+
 # --------------------------------------------------
 # Logs
 # --------------------------------------------------
@@ -49,11 +63,19 @@ LOG_DIR = PROJECT_ROOT / "logs"
 
 LOG_FILE = LOG_DIR / "etl.log"
 
+LOG_LEVEL = config["logging"]["level"]
+
 # --------------------------------------------------
 # Database
 # --------------------------------------------------
 
-CUSTOMERS_TABLE = "customers"
+CUSTOMERS_TABLE = (
+    config["database"]["customers_table"]
+)
+
+ETL_RUN_HISTORY_TABLE = (
+    config["database"]["audit_table"]
+)
 
 # --------------------------------------------------
 # Reports
@@ -66,17 +88,13 @@ DATA_QUALITY_REPORT = (
 )
 
 # --------------------------------------------------
-# Audit
+# Pipeline Options
 # --------------------------------------------------
 
-CREATE_ETL_RUN_HISTORY_SQL = (
-    SQL_DIR / "create_etl_run_history.sql"
+ARCHIVE_ENABLED = (
+    config["pipeline"]["archive_enabled"]
 )
 
-ETL_RUN_HISTORY_TABLE = "etl_run_history"
-
-# --------------------------------------------------
-# Archive
-# --------------------------------------------------
-
-ARCHIVE_DIRECTORY = DATA_DIR / "archive"
+NOTIFICATIONS_ENABLED = (
+    config["pipeline"]["notifications_enabled"]
+)

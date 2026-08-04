@@ -1,0 +1,15 @@
+database:
+  customers_table: customers
+  audit_table: etl_run_history
+
+files:
+  raw_directory: data/raw
+  processed_directory: data/processed
+  archive_directory: data/archive
+
+logging:
+  level: INFO
+
+pipeline:
+  archive_enabled: true
+  notifications_enabled: true
