@@ -35,6 +35,14 @@ def load_data(conn, df):
 
     logger.info("Starting Load Phase...")
 
+    # -------------------------
+    # Skip if no new records
+    # -------------------------
+    if df.empty:
+        logger.info("No new records found.")
+        logger.info("Skipping data load.")
+        return
+
     cur = conn.cursor()
 
     inserted = 0

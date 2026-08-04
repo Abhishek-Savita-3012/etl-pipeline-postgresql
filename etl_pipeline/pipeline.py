@@ -3,11 +3,12 @@ import traceback
 
 from etl_pipeline.config import get_connection
 from etl_pipeline.extract import extract_csv
+from etl_pipeline.incremental import filter_new_records
 from etl_pipeline.load import create_table, load_data
 from etl_pipeline.logger import logger
 from etl_pipeline.settings import (
-    RAW_CUSTOMERS_FILE,
     PROCESSED_CUSTOMERS_FILE,
+    RAW_CUSTOMERS_FILE,
 )
 from etl_pipeline.transform import transform_data
 from etl_pipeline.validation import validate_dataframe
@@ -30,6 +31,10 @@ def run_pipeline():
         # Extract
         # -------------------------
         df = extract_csv(RAW_CUSTOMERS_FILE)
+
+        # -------------------------
+        # Validate
+        # -------------------------
         validate_dataframe(df)
 
         # -------------------------
@@ -37,6 +42,9 @@ def run_pipeline():
         # -------------------------
         df = transform_data(df)
 
+        # -------------------------
+        # Save Processed Data
+        # -------------------------
         PROCESSED_CUSTOMERS_FILE.parent.mkdir(
             parents=True,
             exist_ok=True
@@ -52,22 +60,29 @@ def run_pipeline():
         )
 
         # -------------------------
-        # Load
+        # Database Connection
         # -------------------------
         conn = get_connection()
 
         create_table(conn)
 
-        load_data(conn, df)
+        # -------------------------
+        # Incremental Loading
+        # -------------------------
+        new_df = filter_new_records(conn, df)
+
+        # -------------------------
+        # Load
+        # -------------------------
+        load_data(conn, new_df)
 
         logger.info("ETL Pipeline executed successfully.")
 
         return True
 
-    except Exception as e:
+    except Exception:
 
         logger.exception("ETL Pipeline Failed!")
-        logger.error(str(e))
         logger.debug(traceback.format_exc())
 
         return False
