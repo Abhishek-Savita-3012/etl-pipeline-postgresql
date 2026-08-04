@@ -23,3 +23,7 @@ logs/*.log
 # Windows
 Thumbs.db
 desktop.ini
+
+# Pytest Reports
+reports/*.html
+reports/assets/
