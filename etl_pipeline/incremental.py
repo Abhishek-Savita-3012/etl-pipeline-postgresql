@@ -6,22 +6,34 @@ from etl_pipeline.settings import CUSTOMERS_TABLE
 
 def filter_new_records(conn, df: pd.DataFrame):
     """
-    Filter out records that already exist in the database.
+    Filter out records that already exist
+    in the PostgreSQL database.
     """
 
     logger.info("Starting Incremental Load Check...")
 
-    query = f"""
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"""
         SELECT customer_id
         FROM {CUSTOMERS_TABLE};
-    """
+        """
+    )
 
-    existing = pd.read_sql(query, conn)
+    existing_ids = {
+        row[0]
+        for row in cursor.fetchall()
+    }
+
+    cursor.close()
+
+    existing_records = len(existing_ids)
 
     # -------------------------
     # Database Empty
     # -------------------------
-    if existing.empty:
+    if existing_records == 0:
 
         logger.info(
             "Database is empty. Loading all records."
@@ -37,21 +49,21 @@ def filter_new_records(conn, df: pd.DataFrame):
     # Filter New Records
     # -------------------------
     new_df = df[
-        ~df["customerid"].isin(
-            existing["customer_id"]
-        )
+        ~df["customerid"].isin(existing_ids)
     ]
 
+    new_records = len(new_df)
+
     logger.info(
-        f"Existing Records : {len(existing)}"
+        f"Existing Records : {existing_records}"
     )
 
     logger.info(
-        f"New Records : {len(new_df)}"
+        f"New Records : {new_records}"
     )
 
     return (
         new_df,
-        len(existing),
-        len(new_df),
+        existing_records,
+        new_records,
     )
