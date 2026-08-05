@@ -1,6 +1,7 @@
 import time
 import traceback
 
+from etl_pipeline.archive import archive_processed_file
 from etl_pipeline.audit import (
     create_audit_table,
     insert_audit_record,
@@ -22,9 +23,6 @@ from etl_pipeline.settings import (
     PROCESSED_CUSTOMERS_FILE,
     RAW_DATA_DIRECTORY,
 )
-from etl_pipeline.archive import (
-    archive_processed_file,
-)
 from etl_pipeline.transform import transform_data
 from etl_pipeline.validation import validate_dataframe
 
@@ -40,7 +38,12 @@ def finalize_pipeline(conn, metrics):
         insert_audit_record(conn, metrics)
 
 
-def run_pipeline():
+def run_pipeline(
+    skip_load=False,
+    report_only=False,
+    no_notify=False,
+    verbose=False,
+):
     """
     Runs the complete ETL pipeline.
     """
@@ -51,6 +54,9 @@ def run_pipeline():
     logger.info("=" * 60)
     logger.info("ETL PIPELINE STARTED")
     logger.info("=" * 60)
+
+    if verbose:
+        logger.info("Verbose mode enabled.")
 
     try:
 
@@ -78,12 +84,12 @@ def run_pipeline():
         # -------------------------
         PROCESSED_CUSTOMERS_FILE.parent.mkdir(
             parents=True,
-            exist_ok=True
+            exist_ok=True,
         )
 
         df.to_csv(
             PROCESSED_CUSTOMERS_FILE,
-            index=False
+            index=False,
         )
 
         archive_processed_file()
@@ -92,6 +98,41 @@ def run_pipeline():
             f"Processed data saved to: "
             f"{PROCESSED_CUSTOMERS_FILE}"
         )
+
+        # -------------------------
+        # Report Only Mode
+        # -------------------------
+        if report_only:
+
+            execution_time = (
+                time.perf_counter() - start_time
+            )
+
+            metrics = create_metrics(
+                total_records=total_records,
+                duplicates_removed=transform_metrics[
+                    "duplicates_removed"
+                ],
+                missing_names=transform_metrics[
+                    "missing_names"
+                ],
+                invalid_ages=transform_metrics[
+                    "invalid_ages"
+                ],
+                cleaned_records=cleaned_records,
+                existing_records=0,
+                new_records=0,
+                execution_time=execution_time,
+                pipeline_status="REPORT ONLY",
+            )
+
+            generate_report(metrics)
+
+            logger.info(
+                "Report-only mode completed."
+            )
+
+            return True
 
         # -------------------------
         # Database Connection
@@ -104,14 +145,24 @@ def run_pipeline():
         # -------------------------
         # Incremental Loading
         # -------------------------
-        new_df, existing_records, new_records = (
-            filter_new_records(conn, df)
-        )
+        (
+            new_df,
+            existing_records,
+            new_records,
+        ) = filter_new_records(conn, df)
 
         # -------------------------
         # Load
         # -------------------------
-        load_data(conn, new_df)
+        if skip_load:
+
+            logger.info(
+                "Database loading skipped."
+            )
+
+        else:
+
+            load_data(conn, new_df)
 
         execution_time = (
             time.perf_counter() - start_time
@@ -143,7 +194,8 @@ def run_pipeline():
         # -------------------------
         finalize_pipeline(conn, metrics)
 
-        notify_success(metrics)
+        if not no_notify:
+            notify_success(metrics)
 
         logger.info(
             "ETL Pipeline executed successfully."
@@ -172,18 +224,17 @@ def run_pipeline():
             pipeline_status="FAILED",
         )
 
-        # -------------------------
-        # Finalize
-        # -------------------------
         finalize_pipeline(conn, metrics)
 
-        notify_failure(e)
+        if not no_notify:
+            notify_failure(e)
 
         return False
 
     finally:
 
         if conn is not None:
+
             conn.close()
 
             logger.info(
@@ -203,4 +254,5 @@ def run_pipeline():
 
 
 if __name__ == "__main__":
+
     run_pipeline()
