@@ -102,3 +102,11 @@ ARCHIVE_ENABLED = (
 NOTIFICATIONS_ENABLED = (
     config["pipeline"]["notifications_enabled"]
 )
+
+# --------------------------------------------------
+# Retry
+# --------------------------------------------------
+
+RETRY_ATTEMPTS = config["retry"]["attempts"]
+
+RETRY_DELAY = config["retry"]["delay_seconds"]

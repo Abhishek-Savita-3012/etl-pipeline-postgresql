@@ -15,3 +15,7 @@ logging:
 pipeline:
   archive_enabled: true
   notifications_enabled: true
+
+retry:
+  attempts: 3
+  delay_seconds: 2
